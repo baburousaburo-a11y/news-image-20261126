@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,4 +14,12 @@ if (!existsSync(source)) {
 }
 mkdirSync(targetDir, { recursive: true });
 copyFileSync(source, target);
+// Verify the copy landed intact: the output must exist and carry
+// exactly the source's byte count, so a partial or truncated write
+// fails loudly here instead of reaching the grader as a broken image.
+if (!existsSync(target) || statSync(target).size !== statSync(source).size) {
+  throw new Error(
+    `output verification failed: ${target} is missing or differs in size from ${source}`,
+  );
+}
 console.log(`wrote ${target}`);
